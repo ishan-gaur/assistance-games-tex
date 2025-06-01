@@ -1,0 +1,101 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\DeclareUnicodeCharacter{0302}{\^{}}
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{amsmath, amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{mathtools}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage[backend=biber, style=numeric]{biblatex}
+\addbibresource{references.bib}
+
+
+\title{Thoughts on how we Evaluate AI Assistants and the Python Coding Dataset}
+
+\author{
+  Ishan Gaur \\
+  EECS Dept.\\
+  UC Berkeley\\
+  \texttt{ishang@berkeley.edu} \\
+}
+\begin{document}
+
+\maketitle
+
+\section{Take-aways}
+One weakeness of the current approach is that the algorithmic complexity is quite low and there aren't many design tradeoffs for the user and assistant to consider.
+
+Two key downsides of current assistants is that they try to do too much at once, which means your understanding of the problem and the solution lag far behind, and they don't help you discover a simpler problem/solution to solve that still meets your goals.
+
+With our current setup, what if the reference implementation is just not how most people would interpret the problem--guess that is the query complexity of discovering the reference implementation.
+
+\section{Assistance Game Evaluation}
+Core to the idea of an assistance games\footnote{aka cooperative inverse reinforcement learning} is that the user is the arbitrator of preferences and the assistant helps the user achieve those goals. In this work, we additionally consider that the user may not have a full operational definition of their preferences.\footnote{In general, a viable solution to maximize their preferences may not exist, such as a correct proof of a mathematical contradiction. In this sense, what we mean by "knowing" here is weaker than the sense of "knowing" the next prime larger than the largest known prime that Scott Aaronson discusses in \cite{aaronson201310}}.
+
+How do we evaluate a coding assistant? The two key aspects are to see if it helps:
+\begin{itemize}
+    \item the user effectively define their goal, for themselves and the assistant
+    \item minimize the number of actions the user must take to meet the goal, including having to react to information that the assistant provides.
+\end{itemize}
+
+\subsection{Defining a Goal}
+We don't want our RL algorithm to be rate-limited by collecting training episodes from interactions with real humans solving organic coding problems. Therefore, we sought to create a synthetic dataset and environment, to finally be used with real humans, that evoke the key aspects of the organic setting. These are that:
+\begin{enumerate}
+    \item The overall problem can be easily understood.
+    \item The problem is difficult or at least time-consuming for the user to solve themselves.
+    \item It should be hard for the user to define the entire goal at once. This can be due to multiple reasons:
+        \begin{itemize}
+            \item Such a description would be too long, itself being an intensive task
+            \item The user may not think it's necessary to define certain requirements upfront for the assistant
+            \item The user may not even be aware of these requirements until confronted with a situation in which they become apparent
+            \item The user may not have an exact implementation in mind, such as not having an exact algorithm or data-structure that they want the assistant to use
+        \end{itemize}
+\end{enumerate}
+
+The first two items broadly filter the class of coding tasks that may be appropriate. For training assistants and evaluating them, part three is key.
+
+These can be understood as:
+\begin{enumerate}
+    \item Problem complexity, which is the complexity of the simplest valid solution to the vague problem statement
+    \item Specification complexity, which is the gap between
+        \begin{itemize}
+            \item Minimum complexity across valid solutions
+            \item Implementation complexity of the optimal solution
+        \end{itemize}
+    \item Likelihood of specification discovery, which is the probability that the user will consider and discover all the relevant edge-cases and requirements of the desired behavior
+    \item Specification query complexity, which is the number of queries the user must make to fully discover the desired behavior once they are aware of a certain edge-cases
+\end{enumerate}
+
+We want the assistant to help us bring down the problem and specification complexity if possible, while helping achieve the desired specification as fast as possible. The specification query complexity is a key problem in this. If it is too high then it will not be possible to discover the desired behavior in a reasonable amount of time. Additionally, it may be possible that the pair submit their solution without realizing that they did not discover the desired behavior due to low likelihood of specification discovery.
+
+Desireable behaviors of the assistant. Help bring down the overall problem and specification complexity without reducing the overall reward. Being able to take on as much of the execution burden as possible. Reducing the overall time to achieve sufficiently high reward, in particular compared to the opportunity cost of doing more complex implementation or spending more time refining the problem.
+\begin{itemize}
+    \item Predictability of assistant outcomes given user instructions
+    \item The user's initial understanding of the problem and their preferences
+    \item The user's final understanding of the problem and their preferences
+\end{itemize}
+
+\subsection{Modeling Hidden Preferences}
+To model this, we allow the user to have query access to the reference implementation of the function they are trying to write. The idea is the user can try different inputs to figure out what the desired behavior is. The assistant can ideally even suggest inputs to try if it wants the user to clarify the desired behavior under certain conditions.
+
+\subsection{Dataset Filtering}
+There is a tension between the problem being easy to understand and being difficult enough to warrant the use of an assistant. After filtering for functions that can be run/evaluated outside of the context of the original code, we further needed to address this tension.
+
+As a proxy for detecting problems that are too easy, we simply tested if GPT could solve the problem in a single step given the function signature and docstring. 
+
+Next we needed to test if the remaining tasks were too difficult. In particular, we wanted to test if it would be too hard to discover the desired behavior.
+
+
+\printbibliography
+
+\end{document}
