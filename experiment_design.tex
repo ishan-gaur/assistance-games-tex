@@ -32,12 +32,19 @@
 
 \maketitle
 
-\section{Take-aways}
+\section{TODOs}
 One weakeness of the current approach is that the algorithmic complexity is quite low and there aren't many design tradeoffs for the user and assistant to consider.
 
 Two key downsides of current assistants is that they try to do too much at once, which means your understanding of the problem and the solution lag far behind, and they don't help you discover a simpler problem/solution to solve that still meets your goals.
 
 With our current setup, what if the reference implementation is just not how most people would interpret the problem--guess that is the query complexity of discovering the reference implementation.
+
+https://www.sigecom.org/exchanges/volume_16/1/CHEN.pdf
+https://www.cs.cmu.edu/~guestrin/Publications/AAAI2007-nectar/aaai2007-nectar.pdf
+https://arxiv.org/abs/2111.03278
+https://arxiv.org/pdf/1703.08636
+
+- What if we make guidance interactive where each party can communicate?
 
 \section{Assistance Game Evaluation}
 Core to the idea of an assistance games\footnote{aka cooperative inverse reinforcement learning} is that the user is the arbitrator of preferences and the assistant helps the user achieve those goals. In this work, we additionally consider that the user may not have a full operational definition of their preferences.\footnote{In general, a viable solution to maximize their preferences may not exist, such as a correct proof of a mathematical contradiction. In this sense, what we mean by "knowing" here is weaker than the sense of "knowing" the next prime larger than the largest known prime that Scott Aaronson discusses in \cite{aaronson201310}}.
@@ -95,6 +102,36 @@ As a proxy for detecting problems that are too easy, we simply tested if GPT cou
 
 Next we needed to test if the remaining tasks were too difficult. In particular, we wanted to test if it would be too hard to discover the desired behavior.
 
+\section{Assistance Game Evaluation Framework}
+
+We propose evaluating coding assistants through an assistance game framework where the user defines preferences and the assistant helps achieve those goals. The evaluation focuses on two key aspects: helping users effectively define their goals and minimizing the actions required to meet those goals.
+
+\subsection{Problem Complexity Formalism}
+
+We characterize coding problems along four dimensions:
+\begin{enumerate}
+    \item \textbf{Problem complexity}: The complexity of the simplest valid solution (logically correct according to the initial problem statement).
+    \item \textbf{Specification complexity}: The gap between minimum complexity across valid solutions and implementation complexity of the optimal solution (optimal according to the user's preferences).
+    \item \textbf{Likelihood of specification discovery}: The probability that users will consider/discover all relevant edge-cases and requirements.
+    \item \textbf{Specification query complexity}: The number of queries needed to fully discover desired behavior once aware of edge-cases
+\end{enumerate}
+
+\subsection{Desired Assistant Behaviors}
+
+Effective assistants should:
+\begin{itemize}
+    \item Reduce problem, specification, and query complexity, increase the likelihood of specifi without reducing overall reward
+    \item Take on execution burden while maintaining predictable outcomes
+    \item Minimize time to achieve high reward compared to manual implementation
+    \item But should not reduce the overall reward
+    \item Improve user understanding of both the problem and their preferences
+\end{itemize}
+
+Don't want to feed like we got a higher score but understand the solution worse.
+
+\subsection{Current Approach Limitations}
+
+Our current evaluation framework has several weaknesses. The algorithmic complexity remains quite low with few design tradeoffs to consider. Additionally, existing assistants often try to do too much simultaneously, causing user understanding to lag behind the solution, and they fail to help users discover simpler problems that still meet their goals. The reliance on reference implementations also raises questions about query complexity when the reference doesn't align with typical user interpretations of the problem.
 
 \printbibliography
 
